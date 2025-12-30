@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biên Bản Xác Nhận (3 Liên/A4)</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Times New Roman', serif; 
+            font-size: 10pt; /* Size chữ nhỏ gọn để fit 3 liên */
+            line-height: 1.2; 
+            color: #000; 
+            background-color: #f0f2f5; 
+            margin: 0; padding: 0; 
+        }
+
+        @page { size: A4 portrait; margin: 0; }
+
+        .actions-container { 
+            position: sticky; top: 0; display: flex; justify-content: center; gap: 15px;
+            width: 100%; background-color: #343a40; padding: 10px; z-index: 2000; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .action-btn { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+
+        .page-wrapper { display: flex; justify-content: center; padding: 20px; }
+
+        .a4-page {
+            width: 210mm;
+            height: 296mm; 
+            background: white;
+            /* Padding nhỏ để tận dụng tối đa diện tích */
+            padding: 5mm 10mm; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- CẤU TRÚC 1 BIÊN BẢN (Chiếm 33% trang) --- */
+        .voucher-section {
+            height: 32.5%; /* Để hở 1 chút cho margin */
+            display: flex;
+            flex-direction: column;
+            /* Border mờ để dễ nhìn khi cắt (tùy chọn) */
+            border-bottom: 1px dashed #ccc; 
+            padding-bottom: 5px;
+            padding-top: 5px;
+        }
+        .voucher-section:last-child { border-bottom: none; }
+
+        /* HEADER */
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+        .studio-name { font-weight: bold; font-size: 10pt; text-transform: uppercase; display: block; margin-bottom: 1px; }
+        .studio-info { display: block; font-size: 9pt; margin-bottom: 1px; }
+        .voucher-num-line { font-size: 9pt; margin-bottom: 1px; text-align: right; }
+
+        /* TITLE */
+        .title-section { text-align: center; margin-bottom: 5px; margin-top: -5px; }
+        .main-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; margin: 0; }
+        .date-sub { font-style: italic; font-size: 9pt; }
+
+        /* CUSTOMER INFO */
+        .customer-box { margin-bottom: 5px; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        .info-row { display: flex; margin-bottom: 2px; }
+        .info-label { font-weight: bold; width: 90px; font-size: 9.5pt; }
+        .info-val { flex: 1; font-weight: bold; font-size: 9.5pt; }
+
+        /* JOB TABLE (Dùng bảng để chia cột gọn gàng) */
+        table.job-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 5px; }
+        table.job-table td { border: 1px solid #ccc; padding: 3px 5px; vertical-align: top; }
+        .tbl-label { font-weight: normal; color: #333; font-style: italic; font-size: 9pt; display: block; }
+        .tbl-val { font-weight: bold; font-size: 10pt; display: block;}
+
+        /* SIGNATURES */
+        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 5px; }
+        .sig-col { width: 40%; }
+        .sig-title { font-weight: bold; font-size: 9.5pt; text-transform: uppercase; margin-bottom: 30px; } /* Khoảng ký hẹp lại */
+        .sig-name { font-weight: bold; font-size: 9.5pt; }
+
+        @media print {
+            body { background: none; }
+            .actions-container { display: none; }
+            .page-wrapper { padding: 0; }
+            .a4-page { width: 100%; height: 296mm; box-shadow: none; padding: 5mm 10mm; } 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions-container">
+        <button onclick="window.print()" class="action-btn">🖨️ In Biên Bản</button>
+        <button onclick="downloadPDF()" class="action-btn" style="margin-left:10px">📄 Tải PDF</button>
+    </div>
+
+    <div class="page-wrapper">
+        <div class="a4-page" id="print-area">
+            <!-- Nội dung sẽ được JS render 3 lần vào đây -->
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        const dbData = {
+            id_cv: params.get('id') || "..........",
+            ngay_lap: params.get('ngay_tao') || new Date().toISOString().split('T')[0],
+            
+            // Header Info (Mặc định theo yêu cầu)
+            studio_ten: params.get('ten_studio') || "2H Studio - Sài gòn",
+            studio_dc: params.get('dia_chi_studio') || "85 Hồ Văn Huê",
+            studio_email: params.get('email_studio') || "2hstudio.wedding@gmail.com",
+            studio_hl: params.get('hotline_studio') || "037 893 2005",
+
+            // Khách hàng
+            khach_ten: params.get('khach') || "",
+            khach_dc: params.get('diachi') || "",
+            khach_sdt: params.get('sdt') || "",
+
+            // Công việc
+            dich_vu: params.get('dv') || "",
+            nv_phu_trach: params.get('nv') || "",
+            ngay_thuc_hien: params.get('ngay_lam') || "",
+            dia_diem: params.get('diadiem') || "Studio",
+            ghi_chu: params.get('ghichu') || "",
+            so_tien: Number(params.get('tien')) || 0
+        };
+
+        function createVoucherHTML(index) {
+            const d = new Date(dbData.ngay_lap);
+            const dateStr = `Ngày ${d.getDate().toString().padStart(2,'0')} tháng ${(d.getMonth()+1).toString().padStart(2,'0')} năm ${d.getFullYear()}`;
+            
+            // Format ngày làm
+            let dateWork = dbData.ngay_thuc_hien;
+            if(dateWork && !dateWork.includes('/')) {
+                const dw = new Date(dateWork);
+                if(!isNaN(dw)) dateWork = `${dw.getDate()}/${dw.getMonth()+1}/${dw.getFullYear()}`;
+            }
+
+            return `
+            <div class="voucher-section">
+                <!-- HEADER -->
+                <div class="header-section">
+                    <div>
+                        <span class="studio-name">${dbData.studio_ten}</span>
+                        <span class="studio-info">ĐC: ${dbData.studio_dc}</span>
+                        <span class="studio-info">Email: ${dbData.studio_email}</span>
+                        <span class="studio-info">Hotline: ${dbData.studio_hl}</span>
+                    </div>
+                    <div>
+                        <div class="voucher-num-line">Quyển số: ...........</div>
+                        <div class="voucher-num-line">Số: <span style="font-weight:bold">${dbData.id_cv}</span></div>
+                    </div>
+                </div>
+
+                <!-- TITLE -->
+                <div class="title-section">
+                    <h1 class="main-title">BIÊN BẢN XÁC NHẬN CÔNG VIỆC</h1>
+                    <div class="date-sub">${dateStr}</div>
+                </div>
+
+                <!-- CUSTOMER INFO -->
+                <div class="customer-box">
+                    <div class="info-row">
+                        <span class="info-label">Khách hàng:</span>
+                        <span class="info-val">${dbData.khach_ten}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Địa chỉ:</span>
+                        <span class="info-val">${dbData.khach_dc}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Điện thoại:</span>
+                        <span class="info-val">${dbData.khach_sdt}</span>
+                    </div>
+                </div>
+
+                <!-- JOB DETAILS (GRID TABLE) -->
+                <table class="job-table">
+                    <tr>
+                        <td style="width: 50%;">
+                            <span class="tbl-label">Hạng mục dịch vụ:</span>
+                            <span class="tbl-val">${dbData.dich_vu}</span>
+                        </td>
+                        <td style="width: 50%;">
+                            <span class="tbl-label">Nhân viên thực hiện:</span>
+                            <span class="tbl-val">${dbData.nv_phu_trach}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="tbl-label">Ngày thực hiện:</span>
+                            <span class="tbl-val">${dateWork}</span>
+                        </td>
+                        <td>
+                            <span class="tbl-label">Địa điểm:</span>
+                            <span class="tbl-val">${dbData.dia_diem}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <span class="tbl-label">Ghi chú:</span>
+                            <span class="tbl-val" style="font-weight:normal">${dbData.ghi_chu}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="background-color: #f9f9f9;">
+                            <span class="tbl-label" style="display:inline-block; width:150px; font-weight:bold; font-style:normal">CHI PHÍ / LƯƠNG:</span>
+                            <span class="tbl-val" style="display:inline-block; font-size:11pt">${dbData.so_tien.toLocaleString('vi-VN')} VNĐ</span>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- SIGNATURES -->
+                <div class="signatures">
+                    <div class="sig-col">
+                        <div class="sig-title">Nhân viên thực hiện</div>
+                        <div class="sig-name">${dbData.nv_phu_trach}</div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Đại diện Studio</div>
+                        <div class="sig-note">(Ký, đóng dấu)</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        function renderApp() {
+            const container = document.getElementById('print-area');
+            // Render 3 bản giống nhau
+            container.innerHTML = createVoucherHTML(1) + createVoucherHTML(2) + createVoucherHTML(3);
+            document.title = "CV_" + dbData.id_cv;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+        });
+
+        function downloadPDF() {
+            const element = document.getElementById('print-area');
+            const opt = { margin: 0, filename: document.title + '.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            html2pdf().from(element).set(opt).save();
+        }
+    </script>
+</body>
+</html>
