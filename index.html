@@ -14,7 +14,7 @@
 
         body { 
             font-family: 'Times New Roman', serif; 
-            font-size: 10pt; /* Size chữ nhỏ gọn để fit 3 liên */
+            font-size: 9.5pt; /* Size chữ tối ưu */
             line-height: 1.2; 
             color: #000; 
             background-color: #f0f2f5; 
@@ -36,54 +36,60 @@
             width: 210mm;
             height: 296mm; 
             background: white;
-            /* Padding nhỏ để tận dụng tối đa diện tích */
             padding: 5mm 10mm; 
             display: flex;
             flex-direction: column;
-            justify-content: space-between; 
+            justify-content: flex-start;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        /* --- CẤU TRÚC 1 BIÊN BẢN (Chiếm 33% trang) --- */
+        /* --- CẤU TRÚC 1 BIÊN BẢN --- */
         .voucher-section {
-            height: 32.5%; /* Để hở 1 chút cho margin */
+            flex: 1; 
             display: flex;
             flex-direction: column;
-            /* Border mờ để dễ nhìn khi cắt (tùy chọn) */
-            border-bottom: 1px dashed #ccc; 
-            padding-bottom: 5px;
-            padding-top: 5px;
+            border-bottom: 1px dashed #999; 
+            padding: 5px 0;
+            overflow: hidden;
         }
         .voucher-section:last-child { border-bottom: none; }
 
         /* HEADER */
-        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
-        .studio-name { font-weight: bold; font-size: 10pt; text-transform: uppercase; display: block; margin-bottom: 1px; }
-        .studio-info { display: block; font-size: 9pt; margin-bottom: 1px; }
-        .voucher-num-line { font-size: 9pt; margin-bottom: 1px; text-align: right; }
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
+        .studio-name { font-weight: bold; font-size: 9.5pt; text-transform: uppercase; display: block; margin-bottom: 1px; }
+        .studio-info { display: block; font-size: 9pt; margin-bottom: 0; }
+        .voucher-num-line { font-size: 9pt; margin-bottom: 0; text-align: right; }
 
         /* TITLE */
-        .title-section { text-align: center; margin-bottom: 5px; margin-top: -5px; }
-        .main-title { font-size: 14pt; font-weight: bold; text-transform: uppercase; margin: 0; }
-        .date-sub { font-style: italic; font-size: 9pt; }
+        .title-section { text-align: center; margin-bottom: 8px; margin-top: -5px; }
+        .main-title { font-size: 13pt; font-weight: bold; text-transform: uppercase; margin: 0; line-height: 1.2; }
+        .date-sub { font-style: italic; font-size: 9pt; margin-top: 0; }
 
-        /* CUSTOMER INFO */
-        .customer-box { margin-bottom: 5px; border-bottom: 1px solid #000; padding-bottom: 2px; }
+        /* CUSTOMER INFO (Đã bỏ border-bottom) */
+        .customer-box { margin-bottom: 5px; padding-bottom: 2px; }
         .info-row { display: flex; margin-bottom: 2px; }
-        .info-label { font-weight: bold; width: 90px; font-size: 9.5pt; }
-        .info-val { flex: 1; font-weight: bold; font-size: 9.5pt; }
+        
+        /* Chia đôi dòng 1 */
+        .half-col { flex: 1; display: flex; }
+        .info-label { font-weight: bold; font-size: 9.5pt; white-space: nowrap; margin-right: 5px;}
+        .info-val { font-weight: normal; font-size: 9.5pt; flex: 1; }
 
-        /* JOB TABLE (Dùng bảng để chia cột gọn gàng) */
+        /* JOB TABLE */
         table.job-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 5px; }
         table.job-table td { border: 1px solid #ccc; padding: 3px 5px; vertical-align: top; }
-        .tbl-label { font-weight: normal; color: #333; font-style: italic; font-size: 9pt; display: block; }
-        .tbl-val { font-weight: bold; font-size: 10pt; display: block;}
+        .tbl-label { font-weight: normal; color: #333; font-style: italic; font-size: 9pt; display: block; margin-bottom: 1px;}
+        .tbl-val { font-weight: bold; font-size: 9.5pt; display: block; line-height: 1.1;}
 
         /* SIGNATURES */
-        .signatures { display: flex; justify-content: space-around; text-align: center; margin-top: 5px; }
-        .sig-col { width: 40%; }
-        .sig-title { font-weight: bold; font-size: 9.5pt; text-transform: uppercase; margin-bottom: 30px; } /* Khoảng ký hẹp lại */
-        .sig-name { font-weight: bold; font-size: 9.5pt; }
+        .signatures { display: flex; justify-content: space-between; text-align: center; margin-top: 2px; padding-bottom: 2px; }
+        .sig-col { width: 32%; }
+        .sig-title { font-weight: bold; font-size: 9pt; text-transform: uppercase; margin-bottom: 2px; }
+        
+        .sig-space { height: 35px; } 
+        
+        .sig-note { font-style: italic; font-size: 8.5pt; margin-top: -2px; }
+        .sig-name { font-weight: bold; font-size: 9.5pt; margin-top: 2px; }
 
         @media print {
             body { background: none; }
@@ -102,7 +108,7 @@
 
     <div class="page-wrapper">
         <div class="a4-page" id="print-area">
-            <!-- Nội dung sẽ được JS render 3 lần vào đây -->
+            <!-- JS sẽ render 3 phần vào đây -->
         </div>
     </div>
 
@@ -112,8 +118,9 @@
         const dbData = {
             id_cv: params.get('id') || "..........",
             ngay_lap: params.get('ngay_tao') || new Date().toISOString().split('T')[0],
+            nguoi_tao: params.get('nguoi_tao') || "Admin",
             
-            // Header Info (Mặc định theo yêu cầu)
+            // Header Info
             studio_ten: params.get('ten_studio') || "2H Studio - Sài gòn",
             studio_dc: params.get('dia_chi_studio') || "85 Hồ Văn Huê",
             studio_email: params.get('email_studio') || "2hstudio.wedding@gmail.com",
@@ -130,10 +137,9 @@
             ngay_thuc_hien: params.get('ngay_lam') || "",
             dia_diem: params.get('diadiem') || "Studio",
             ghi_chu: params.get('ghichu') || "",
-            so_tien: Number(params.get('tien')) || 0
         };
 
-        function createVoucherHTML(index) {
+        function createVoucherHTML() {
             const d = new Date(dbData.ngay_lap);
             const dateStr = `Ngày ${d.getDate().toString().padStart(2,'0')} tháng ${(d.getMonth()+1).toString().padStart(2,'0')} năm ${d.getFullYear()}`;
             
@@ -166,15 +172,19 @@
                     <div class="date-sub">${dateStr}</div>
                 </div>
 
-                <!-- CUSTOMER INFO -->
+                <!-- CUSTOMER INFO (Gộp dòng, bỏ border) -->
                 <div class="customer-box">
                     <div class="info-row">
-                        <span class="info-label">Khách hàng:</span>
-                        <span class="info-val">${dbData.khach_ten}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Địa chỉ:</span>
-                        <span class="info-val">${dbData.khach_dc}</span>
+                        <!-- Cột Trái: Tên -->
+                        <div class="half-col" style="flex: 1.2; margin-right: 10px;">
+                            <span class="info-label">Khách hàng:</span>
+                            <span class="info-val">${dbData.khach_ten}</span>
+                        </div>
+                        <!-- Cột Phải: Địa chỉ -->
+                        <div class="half-col" style="flex: 2;">
+                            <span class="info-label">Địa chỉ:</span>
+                            <span class="info-val">${dbData.khach_dc}</span>
+                        </div>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Điện thoại:</span>
@@ -182,7 +192,7 @@
                     </div>
                 </div>
 
-                <!-- JOB DETAILS (GRID TABLE) -->
+                <!-- JOB DETAILS TABLE -->
                 <table class="job-table">
                     <tr>
                         <td style="width: 50%;">
@@ -205,15 +215,19 @@
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2">
-                            <span class="tbl-label">Ghi chú:</span>
-                            <span class="tbl-val" style="font-weight:normal">${dbData.ghi_chu}</span>
+                        <td>
+                            <span class="tbl-label">Gói chụp:</span>
+                            <span class="tbl-val">&nbsp;</span>
+                        </td>
+                        <td>
+                            <span class="tbl-label">Thời gian:</span>
+                            <span class="tbl-val">&nbsp;</span>
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="2" style="background-color: #f9f9f9;">
-                            <span class="tbl-label" style="display:inline-block; width:150px; font-weight:bold; font-style:normal">CHI PHÍ / LƯƠNG:</span>
-                            <span class="tbl-val" style="display:inline-block; font-size:11pt">${dbData.so_tien.toLocaleString('vi-VN')} VNĐ</span>
+                        <td colspan="2" style="height: 38px;">
+                            <span class="tbl-label">Ghi chú:</span>
+                            <span class="tbl-val" style="font-weight:normal">${dbData.ghi_chu}</span>
                         </td>
                     </tr>
                 </table>
@@ -221,12 +235,19 @@
                 <!-- SIGNATURES -->
                 <div class="signatures">
                     <div class="sig-col">
-                        <div class="sig-title">Nhân viên thực hiện</div>
+                        <div class="sig-title">NGƯỜI LẬP PHIẾU</div>
+                        <div class="sig-space"></div>
+                        <div class="sig-name">${dbData.nguoi_tao}</div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">NHÂN VIÊN THỰC HIỆN</div>
+                        <div class="sig-space"></div>
                         <div class="sig-name">${dbData.nv_phu_trach}</div>
                     </div>
                     <div class="sig-col">
-                        <div class="sig-title">Đại diện Studio</div>
+                        <div class="sig-title">ĐẠI DIỆN STUDIO</div>
                         <div class="sig-note">(Ký, đóng dấu)</div>
+                        <div class="sig-space"></div>
                     </div>
                 </div>
             </div>
@@ -235,8 +256,7 @@
 
         function renderApp() {
             const container = document.getElementById('print-area');
-            // Render 3 bản giống nhau
-            container.innerHTML = createVoucherHTML(1) + createVoucherHTML(2) + createVoucherHTML(3);
+            container.innerHTML = createVoucherHTML() + createVoucherHTML() + createVoucherHTML();
             document.title = "CV_" + dbData.id_cv;
         }
 
